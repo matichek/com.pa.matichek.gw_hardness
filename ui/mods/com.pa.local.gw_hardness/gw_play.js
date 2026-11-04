@@ -73,6 +73,10 @@
       entry.army.slots = _.without(entry.army.slots, entry.slot);
     }
 
+    config.armies = _.filter(config.armies, function (army) {
+      return army && army.slots && army.slots.length;
+    });
+
     console.log(
       "Hardness spawn: " +
         planetCount +
@@ -112,8 +116,10 @@
       wrapHire(GWReferee);
       attempts += 1;
       // Overhaul replaces hire after this scene loads. Keep wrapping the latest hire.
-      if (attempts < 40) {
+      if (attempts < 120) {
         _.delay(watch, 250);
+      } else if (!GWReferee || !GWReferee.hire || !GWReferee.hire.__hardnessWrapped) {
+        console.error("Hardness: spawn rules were not installed after 30 seconds");
       }
     });
   };
@@ -130,22 +136,43 @@
     }
   };
 
-  // applyCards rebuilds maxCards from the commander card, which puts the bank back at 4.
-  // Put it back to 40 after every rebuild, and also if it drops during that rebuild.
+  // The commander card adds initialCardSlots + 1 slots on every rebuild. setBank raises that to 40.
+  // This is a minimum: slots that other cards add stay on top of it.
   var enforceBank = function (inventory) {
     if (!inventory || !inventory.maxCards || !inventory.cards) {
       return;
     }
+    if (inventory.isApplyingCards && inventory.isApplyingCards()) {
+      return;
+    }
     var floor = Math.max(TECH_BANK, inventory.cards().length);
-    if (inventory.maxCards() !== floor) {
+    if (inventory.maxCards() < floor) {
       inventory.maxCards(floor);
     }
+  };
+
+  var bankReady = false;
+  var prepareBank = function (inventory) {
+    if (bankReady) {
+      return;
+    }
+    bankReady = true;
+    var loader = typeof requireGW === "function" ? requireGW : require;
+    loader(["shared/gw_common"], function (GW) {
+      setBank(GW);
+      if (inventory && inventory.applyCards) {
+        inventory.applyCards(function () {
+          enforceBank(inventory);
+        });
+      }
+    });
   };
 
   var pinBank = function (inventory) {
     if (!inventory) {
       return;
     }
+    prepareBank(inventory);
     enforceBank(inventory);
     if (!inventory.__hardnessBankSub && inventory.maxCards.subscribe) {
       inventory.__hardnessBankSub = true;
@@ -189,8 +216,7 @@
     var style = document.createElement("style");
     style.id = "hardness-pick-style";
     style.textContent =
-      ".hardness-picked { outline: 2px solid #e6c36a; outline-offset: 4px; }" +
-      ".div_options_bar input { display: inline-block !important; margin-right: 8px; }";
+      ".hardness-picked { outline: 2px solid #e6c36a; outline-offset: 4px; }";
     document.head.appendChild(style);
   }
 
@@ -247,7 +273,16 @@
           return added.promise();
         });
       };
-      return original.call(model, selectedCardIndex);
+      var result;
+      try {
+        result = original.call(model, selectedCardIndex);
+      } finally {
+        // winTurn restores itself when called. If win returned early, put it back here.
+        if (game.winTurn !== winTurn) {
+          game.winTurn = winTurn;
+        }
+      }
+      return result;
     };
     wrapped.__hardnessPick = true;
     model.win = wrapped;
@@ -305,6 +340,11 @@
           }
           updatePickPrompt();
           console.log("Hardness offer: " + list.length + " cards");
+          loader(["shared/gw_common"], function (GW) {
+            if (GW && GW.manifest && GW.manifest.saveGame) {
+              GW.manifest.saveGame(game);
+            }
+          });
         });
     });
   };
@@ -314,12 +354,12 @@
     if (!bar.length) {
       return;
     }
-    var gwoButton = bar.find("input[value='Reroll Tech']");
+    var gwoButton = bar.find("input[data-bind*='rerollTech']");
     if (gwoButton.length) {
       gwoButton.val("Reroll");
       return;
     }
-    if (bar.find("#hardness-reroll").length || bar.find("input[value='Reroll']").length) {
+    if (bar.find("#hardness-reroll").length) {
       return;
     }
     var button = $(
@@ -333,9 +373,10 @@
     bar.prepend(button);
   };
 
+  var offerHooked = false;
   var wrapOffer = function () {
     installRerollButton();
-    if (!model || !model.explore || model.explore.__hardnessOffer) {
+    if (!model || !model.explore || offerHooked) {
       if (model && model.rerollTech && !model.rerollTech.__hardnessReroll) {
         model.rerollTech = function () {
           if (model.scanning && model.scanning()) {
@@ -347,16 +388,16 @@
       }
       return;
     }
-    var originalExplore = model.explore;
-    var wrappedExplore = function () {
-      var result = originalExplore.apply(model, arguments);
-      _.delay(function () {
-        dealOffer(true);
-      }, 2200);
-      return result;
-    };
-    wrappedExplore.__hardnessOffer = true;
-    model.explore = wrappedExplore;
+    // Top up the offer to 5 once the stock or GWO deal has finished (scanning ends).
+    var game = model.game && model.game();
+    if (model.scanning && model.scanning.subscribe) {
+      model.scanning.subscribe(function (scanning) {
+        if (!scanning && game && game.turnState && game.turnState() === "explore") {
+          dealOffer(true);
+        }
+      });
+    }
+    offerHooked = true;
     model.rerollTech = function () {
       if (model.scanning && model.scanning()) {
         return;
@@ -462,8 +503,10 @@
       pinBank(model.game().inventory());
     }
     cardAttempts += 1;
-    if (cardAttempts < 40) {
+    if (cardAttempts < 120) {
       _.delay(watchCards, 250);
+    } else if (!offerHooked || !(model.win && model.win.__hardnessPick)) {
+      console.error("Hardness: card hooks were not installed after 30 seconds");
     }
   };
   watchCards();

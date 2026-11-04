@@ -16,6 +16,15 @@ A new war also starts you with 3 random technologies. After each battle the cach
 - A new war deals 3 random technologies into your inventory. The bank stays at 40 slots, including after a win rebuilds it.
 - Each technology cache shows 5 cards. Take two. Reroll replaces them with 5 new cards. Click the first choice again to change it. Commander unlocks still take one card.
 
+## Requirements and limits
+
+- Needs **Titans** and **Galactic War Overhaul** (`com.pa.quitch.gwaioverhaul`). The ramp reads GWO's hop count; the stock galaxy builder sends a different number, so the ramp would not line up without it.
+- GWO settings change the ramp. Large Planets adds 4 to the system size, so home and nearby stars get bigger systems. System Scaling off picks random sizes, so many stars become 6 planets. Co-op adds one size per extra player. Single-player with default settings gives the table above.
+- The start cards, the top-up to 5 cards, and rerolls are dealt from the stock deck, not from GWO's own deck.
+- Rerolls are unlimited and free.
+- Single-player only. Co-op is not supported.
+- When a system has more enemy slots than the target, extra enemy slots are removed, including bosses and minions. Armies left with no slots are dropped.
+
 ## Install
 
 1. Download or clone this repository.
