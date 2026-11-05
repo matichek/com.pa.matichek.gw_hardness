@@ -28,12 +28,12 @@ A new war also starts you with 3 random technologies. After each battle the cach
 ## Install
 
 1. Download or clone this repository.
-2. Copy the `com.pa.local.gw_hardness` folder into your Titans client mods folder. The folder name must stay `com.pa.local.gw_hardness`.
+2. Copy the `com.pa.matichek.gw_hardness` folder into your Titans client mods folder. The folder name must stay `com.pa.matichek.gw_hardness`.
 
    Windows:
 
    ```
-   %LOCALAPPDATA%\Uber Entertainment\Planetary Annihilation\client_mods\com.pa.local.gw_hardness
+   %LOCALAPPDATA%\Uber Entertainment\Planetary Annihilation\client_mods\com.pa.matichek.gw_hardness
    ```
 
 3. Start Titans. Enable **Hardness** in the mods list if it is not already on.
