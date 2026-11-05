@@ -1,11 +1,11 @@
 {
-  "author": "Local",
+  "author": "matichek",
   "build": "116982",
   "category": ["galactic-war", "titans"],
   "context": "client",
   "date": "2026-11-02",
   "dependencies": ["com.pa.quitch.gwaioverhaul"],
-  "forum": "https://github.com/matichek/com.pa.local.gw_hardness",
+  "forum": "https://github.com/matichek/com.pa.local.gw_hardness/discussions",
   "galacticWarMod": true,
   "titansOnly": true,
   "description": "Titans Galactic War only. Requires Galactic War Overhaul. Home stays small. The first enemy system is 2 planets, then systems ramp to 6. You land on one planet. Every other planet gets 3 enemy commanders, or 4 on the largest systems. A new war starts you with 3 random technologies. Each win offers 5 cards, you take 2, and you can reroll without limit. Start a new war after enabling this mod.",
@@ -22,6 +22,6 @@
       "coui://ui/mods/com.pa.local.gw_hardness/gw_play.js"
     ]
   },
-  "signature": "not yet implemented",
-  "version": "1.0.0"
+  "signature": " ",
+  "version": "1.0.1"
 }
